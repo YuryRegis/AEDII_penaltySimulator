@@ -10,7 +10,7 @@ struct no
     int cont;              // contador de eventos
     int chute_x, chute_y; //coordenadas de chute
     int gol_x, gol_y;     // coordenadas de posicionamento do goleiro
-    char resultado[30];
+    char resultado[30];   //variavel que recebe o resultado da cobranca - gol, defesa ou chute para fora.
     struct no *prox;
 };
 
@@ -20,26 +20,28 @@ typedef struct
     struct no *fim;
 } fila;
 
-void create(fila *s);
+void create(fila *s); //funcao para criar a fila
 int pushCobranca(fila *s, int cx, int cy, int gx, int gy, int cont); //cx = coord chute x, cy = coord chute y, gx = coord gol x, gy = coord gol y
-void mostraCobranca(int cx, int cy, int gx, int gy, int cont, int resultado);
-int isEmpty (fila s);
-void geraCoordenadas(int *cx, int *cy, int *gx, int *gy);
-void mostrafila (fila s);
-int verifica_cobranca (int cx, int cy, int gx, int gy);
-void imprimeGOL();
-
+void mostraCobranca(int cx, int cy, int gx, int gy, int cont, int resultado); //exibe os pontos de chute e goleiro. Por fim, exibe qual o resultado.
+int isEmpty (fila s); //ver se fila esta vazia
+void geraCoordenadas(int *cx, int *cy, int *gx, int *gy); //funcao que gera as coordenadas para o chute e para posicao do goleiro
+void mostrafila (fila s); //exibir as filas
+int verifica_cobranca (int cx, int cy, int gx, int gy); //determina resultado da cobranca de acordo com as coordenadas e retorna valor
+void imprimeGOL(); //exibicao grafica dos pontos de interesse no simulador - VERIFIQUEM AQUI
+void exibeEstatisticas(int cont, int contFora, int contDefesa, int contGol); //exibir estatisticas gerais de simulacao
+void teclaContinuar(); //pressione qualquer tecla para continuar + getch
 
 int main ()
 {
-    int cx, cy, gx, gy, cont=0, opcao;
+    int cx, cy, gx, gy, opcao;
+    int cont=0, contFora = 0, contDefesa = 0, contGol = 0;
 
     fila cobranca;
     fila fora;
     fila defesa;
     fila gol;
 
-    srand(time(0));
+    srand(time(0)); //semente para gerar numeros aleatorios
 
     create(&cobranca);
     create(&fora);
@@ -47,93 +49,107 @@ int main ()
     create(&gol);
 
     printf("\n Simulador de cobrancas de penalti\n\n");
-    imprimeGOL();
-    printf(" Digite qualquer tecla para comecar: \n\n");
-    _getch();
+    teclaContinuar();
+    system("cls"); //funçao do windows para limpar a tela
 
-    do
+    do //loop de execuçao do codigo de cobrancas e armazenamento dos dados nas filas
     {
-        cont++;
-        geraCoordenadas(&cx, &cy, &gx, &gy);
-        pushCobranca(&cobranca, cx, cy, gx, gy, cont);
+        cont++; //contador de cobrancas
+        geraCoordenadas(&cx, &cy, &gx, &gy); //chamada da funcao que gera randomicamente as coordenadas de chute e goleiro
 
-        if(verifica_cobranca (cx, cy, gx, gy)==-1)
+        pushCobranca(&cobranca, cx, cy, gx, gy, cont); //insere os pontos na fila cobranca
+
+        if(verifica_cobranca (cx, cy, gx, gy)==-1) //verifica se foi para fora
         {
             pushCobranca(&fora, cx, cy, gx, gy, cont);
             mostraCobranca(cx, cy, gx, gy, cont, -1);
+            contFora++; //contador de chutes fora
         }
 
-        if(verifica_cobranca(cx, cy, gx, gy)==0)
+        if(verifica_cobranca(cx, cy, gx, gy)==0) //verifica se foi defesa
         {
             pushCobranca(&defesa, cx, cy, gx, gy, cont);
             mostraCobranca(cx, cy, gx, gy, cont, 0);
+            contDefesa++; //contador de defesas
         }
 
-        if(verifica_cobranca(cx, cy, gx, gy)==1)
+        if(verifica_cobranca(cx, cy, gx, gy)==1) //verifica se foi gol
         {
             pushCobranca(&gol, cx, cy, gx, gy, cont);
             mostraCobranca(cx, cy, gx, gy, cont, 1);
+            contGol++;  //contador de gols
         }
 
         printf(" Tecle para parar...\n\n");
 
-        Sleep(1000);
+        Sleep(1000); //funcao para pausar execucao - no caso, pausa por 1 segundo
 
-    }while(!kbhit());
+    }while(!kbhit()); // kbhit = ler tecla qualquer do teclado. Ou seja, executa o loop enquanto nenhuma tecla for apertada.
 
 
-    do
+    do //loop de execuçao do menu
         {
             system("cls");
             printf("\n Menu de Dados\n");
-            printf(" 1 - Ver a lista completa de cobrancas\n");
-            printf(" 2 - Ver a lista de Erros\n");
+            printf(" 1 - Explicacao do modo de funcionamento da simulacao\n");
+            printf(" 2 - Ver a lista completa de cobrancas\n");
             printf(" 3 - Ver a lista de Acertos\n");
             printf(" 4 - Ver a lista de Defesas\n");
-            printf(" 5 - Ver as estatisticas completas\n");
+            printf(" 5 - Ver a lista de Erros\n");
+            printf(" 6 - Ver as estatisticas gerais\n");
             printf(" 9 - Sair do programa\n");
-            printf(" Digite a opcao desejada: \n");
+            printf(" Digite a opcao desejada:");
             scanf("%d", &opcao);
             switch(opcao)
                 {
                     case 1:
-                        mostrafila(cobranca);
-                        system("pause");
+                        system("cls");
+                        imprimeGOL();
+                        teclaContinuar();
                         break;
                     case 2:
-                        mostrafila(fora);
-                        system("pause");
+                        system("cls");
+                        mostrafila(cobranca);
+                        teclaContinuar();
                         break;
                     case 3:
+                        system("cls");
                         mostrafila(gol);
-                        system("pause");
+                        teclaContinuar();
                         break;
                     case 4:
+                        system("cls");
                         mostrafila(defesa);
-                        system("pause");
+                        teclaContinuar();
                         break;
                     case 5:
-                        printf("Ainda nao fiz.\n");
-                        system("pause");
+                        system("cls");
+                        mostrafila(fora);
+                        teclaContinuar();
+                        break;
+                    case 6:
+                        system("cls");
+                        exibeEstatisticas(cont, contFora, contDefesa, contGol);
+                        teclaContinuar();
                         break;
                     case 9:
-                        printf(" Saindo...\n");
+                        printf("\n Saindo...\n");
                         break;
                     default:
-                        printf(" Opcao inexistente. Saindo...\n");
+                        printf(" Opcao inexistente. retornando ao menu...\n");
+                        Sleep(1500);
                         break;
                 }
         }while(opcao!=9);
 
-    printf("\nAte mais!\n");
-    Sleep(3000);
+    printf("\n Ate mais!\n");
+    Sleep(1500);
 
     return 0;
     }
 
-
-
 //funções
+
 void create(fila *s)
 {
 s->inicio = NULL;
@@ -154,17 +170,13 @@ struct no *aux;
     aux->gol_y=gy;
     //aux->prox= s->topo;
     //s->topo=aux;
-    if(verifica_cobranca (cx, cy, gx, gy)==-1)
+    if(verifica_cobranca (cx, cy, gx, gy)==-1) //usa funcao verifica_cobranca para determinar o resultado e copiar a string referente a variavel de resultado na fila.
         strcpy(aux->resultado, "Chute pra fora");
     else if(verifica_cobranca (cx, cy, gx, gy)==0)
         strcpy(aux->resultado, "Defesa do goleiro");
     else
         strcpy(aux->resultado, "Gol!");
 
-    //printf(" Cobranca No. %d\n", aux->cont);
-    //printf(" Chute em (%d ; %d)\n", aux->chute_x, aux->chute_y);
-    //printf(" Goleiro em (%d ; %d)\n", aux->gol_x, aux->gol_y);
-    //printf(" Resultado: %s!\n", aux->resultado);
 
      aux->prox=NULL;
     if (s->inicio==NULL)
@@ -183,7 +195,7 @@ int isEmpty (fila s)
     return 0;
 }
 
-void geraCoordenadas(int *cx, int *cy, int *gx, int *gy)
+void geraCoordenadas(int *cx, int *cy, int *gx, int *gy) //gera valores aleatorios dentro dos limites estabelecidos para execuçao do simulador
 {
 
 
@@ -191,7 +203,7 @@ void geraCoordenadas(int *cx, int *cy, int *gx, int *gy)
     *cy = rand()%3;
 
     *gx = rand()%4;
-    if(*gx<1)
+    if(*gx<1) //if usado caso o valor gerado para goleiro x seja melhor que 1, oq e impossivel visto que goleiro deve estar entre 1 e 3 do eixo x.
         *gx++;
 
     *gy = rand()%2;
@@ -205,7 +217,7 @@ void mostrafila (fila s)
     aux = s.inicio;
 
     if (aux == NULL)
-        printf("Sem dados a exibir.\n");
+        printf(" Sem dados a exibir.\n");
     else
     {
         while(aux != NULL)
@@ -219,31 +231,31 @@ void mostrafila (fila s)
     }
 }
 
-int verifica_cobranca (int cx, int cy, int gx, int gy)
+int verifica_cobranca (int cx, int cy, int gx, int gy) //verifica o resultado da cobranca de acordo com posicao do chute e do goleiro
 {
 
     if (cy == 2)
     {
-        //printf(" Chute para fora!\n");
+        //Chute para fora;
         return -1;
     }
     else if (cx<0 || cx>3)
     {
-        //printf(" Chute para fora!\n");
+        //Chute para fora
         return -1;
     }
     else if(cx == gx && cy == gy)
     {
-        //printf(" Defesa do goleiro!\n");
+        //Defesa do goleiro
         return 0;
     }
 
-    else //printf(" Gol!\n");
+    else //Gol
 
     return 1;
 }
 
-void mostraCobranca(int cx, int cy, int gx, int gy, int cont, int resultado)
+void mostraCobranca(int cx, int cy, int gx, int gy, int cont, int resultado) //exibe o resultado da cobranca
 {
     printf(" Cobranca No. %d\n", cont);
     printf(" Chute em   (%d ; %d)\n", cx, cy);
@@ -257,10 +269,7 @@ void mostraCobranca(int cx, int cy, int gx, int gy, int cont, int resultado)
 
 }
 
-
-
-
-void imprimeGOL()
+void imprimeGOL() //exibe o funcionamento das coordenadas do simulador. **OLHEM ISSO**
 {
     printf(R"EOF(
  Eis a determinacao do posicionamento no gol:
@@ -271,4 +280,22 @@ void imprimeGOL()
  (0;0)|(1;0)(2;0)(3;0)|(4;0)
 
 )EOF");
+}
+
+void exibeEstatisticas(int cont, int contFora, int contDefesa, int contGol) //gera os dados das estatisticas do simulador. calculos feitos direto nos printf para economizar variaveis
+{
+    float contFloat; //usar conversao para variavel float pra nao ter erro na divisao entre inteiros
+    contFloat = cont;
+
+    printf("\n Estatisticas gerais de simulacao\n\n");
+    printf(" Total de Cobrancas: %d\n Gols Feitos: %d\n Defesas: %d\n Chutes Fora: %d\n",cont, contGol, contDefesa, contFora);
+    printf(" Porcentagem de acertos: %.2f%%\n", (contGol/contFloat)*100);
+    printf(" Porcentagem de Defesas: %.2f%%\n", (contDefesa/contFloat)*100);
+    printf(" Porcentagem de Chutes para Fora: %.2f%%\n\n", (contFora/contFloat)*100);
+}
+
+void teclaContinuar() //mensagem de execuçao em todo fim de tarefa.
+{
+    printf(" Digite qualquer tecla para continuar: ");
+    _getch();
 }
