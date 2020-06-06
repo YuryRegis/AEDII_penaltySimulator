@@ -1,0 +1,20 @@
+# depslib dependency file v1.0
+1589160484 source:c:\users\denis\desktop\simulador\simulador de pênaltis\main.cpp
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+
+1589260093 source:c:\users\denis\desktop\aed2\simulador\simulador de pênaltis\main.cpp
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	<windows.h>
+	<conio.h>
+
+1589555907 source:c:\users\denis\desktop\simulador de pênaltis\simulador de pênaltis\main.cpp
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	<windows.h>
+	<conio.h>
+
