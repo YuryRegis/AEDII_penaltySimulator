@@ -18,6 +18,7 @@
 					<Add library="mingw32" />
 					<Add library="SDL2main" />
 					<Add library="SDL2" />
+					<Add library="SDL2_image" />
 				</Linker>
 			</Target>
 			<Target title="Release">

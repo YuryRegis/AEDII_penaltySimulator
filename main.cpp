@@ -1,201 +1,200 @@
-
+#define SDL_MAIN_HANDLED
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <windows.h>
 #include <conio.h>
+#include <stdbool.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+
 
 struct no
 {
-    int cont;              // contador de eventos
     int chute_x, chute_y; //coordenadas de chute
-    int gol_x, gol_y;     // coordenadas de posicionamento do goleiro
-    char resultado[30];   //variavel que recebe o resultado da cobranca - gol, defesa ou chute para fora.
+    int gol_x, gol_y; // coordenadas de posicionamento do goleiro
     struct no *prox;
 };
 
+
 typedef struct
 {
-    struct no *inicio;
-    struct no *fim;
-} fila;
+    struct no *topo;
+} pilha;
 
-void create(fila *s); //funcao para criar a fila
-int pushCobranca(fila *s, int cx, int cy, int gx, int gy, int cont); //cx = coord chute x, cy = coord chute y, gx = coord gol x, gy = coord gol y
-void mostraCobranca(int cx, int cy, int gx, int gy, int cont, int resultado); //exibe os pontos de chute e goleiro. Por fim, exibe qual o resultado.
-int isEmpty (fila s); //ver se fila esta vazia
-void geraCoordenadas(int *cx, int *cy, int *gx, int *gy); //funcao que gera as coordenadas para o chute e para posicao do goleiro
-void mostrafila (fila s); //exibir as filas
-int verifica_cobranca (int cx, int cy, int gx, int gy); //determina resultado da cobranca de acordo com as coordenadas e retorna valor
-void imprimeGOL(); //exibicao grafica dos pontos de interesse no simulador - VERIFIQUEM AQUI
-void exibeEstatisticas(int cont, int contFora, int contDefesa, int contGol); //exibir estatisticas gerais de simulacao
-void teclaContinuar(); //pressione qualquer tecla para continuar + getch
 
-int main ()
+void create(pilha *s);
+int pushCobranca(pilha *s, int cx, int cy, int gx, int gy); //cx = coord chute x, cy = coord chute y, gx = coord gol x, gy = coord gol y
+int isEmpty (pilha s);
+void geraCoordenadas(int *cx, int *cy, int *gx, int *gy);
+void mostraPilha (pilha s);
+int verifica_cobranca (int cx, int cy, int gx, int gy);
+
+
+int main (int argv, char** args)
 {
-    int cx, cy, gx, gy, opcao;
-    int cont=0, contFora = 0, contDefesa = 0, contGol = 0;
+    int cx, cy, gx, gy;
+    bool runnig = true;
 
-    fila cobranca;
-    fila fora;
-    fila defesa;
-    fila gol;
+    SDL_Init(SDL_INIT_VIDEO);
+    IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
 
-    srand(time(0)); //semente para gerar numeros aleatorios
+    SDL_Window *window = SDL_CreateWindow("Simulador de Penaltis", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_OPENGL);
+    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
-    create(&cobranca);
-    create(&fora);
-    create(&defesa);
-    create(&gol);
 
-    printf("\n Simulador de cobrancas de penalti\n\n");
-    teclaContinuar();
-    system("cls"); //funçao do windows para limpar a tela
+    SDL_Surface *image = IMG_Load("images/intro.png");
+    SDL_Texture *image_texture = SDL_CreateTextureFromSurface(renderer, image);
+    SDL_FreeSurface(image);
+    SDL_Rect texture_destination;
+    texture_destination.x = 1;
+    texture_destination.y = 0;
+    texture_destination.w = 623;
+    texture_destination.h = 313;
 
-    do //loop de execuçao do codigo de cobrancas e armazenamento dos dados nas filas
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, image_texture, NULL, &texture_destination);
+    SDL_RenderPresent(renderer);
+
+    Sleep(5000);
+    while(runnig)
     {
-        cont++; //contador de cobrancas
-        geraCoordenadas(&cx, &cy, &gx, &gy); //chamada da funcao que gera randomicamente as coordenadas de chute e goleiro
-
-        pushCobranca(&cobranca, cx, cy, gx, gy, cont); //insere os pontos na fila cobranca
-
-        if(verifica_cobranca (cx, cy, gx, gy)==-1) //verifica se foi para fora
+        SDL_Event event;
+        // caso capture algum evento
+        if (SDL_PollEvent(&event))
         {
-            pushCobranca(&fora, cx, cy, gx, gy, cont);
-            mostraCobranca(cx, cy, gx, gy, cont, -1);
-            contFora++; //contador de chutes fora
-        }
+            switch(event.type)
+            {
+                case SDL_MOUSEBUTTONDOWN:
+                    if(event.button.button == SDL_BUTTON_LEFT)
+                    {
+                        SDL_Log("Click direito reconhecido!\n Iniciando chutes ao GOL!");
 
-        if(verifica_cobranca(cx, cy, gx, gy)==0) //verifica se foi defesa
-        {
-            pushCobranca(&defesa, cx, cy, gx, gy, cont);
-            mostraCobranca(cx, cy, gx, gy, cont, 0);
-            contDefesa++; //contador de defesas
-        }
+                        //Imagem inicial
 
-        if(verifica_cobranca(cx, cy, gx, gy)==1) //verifica se foi gol
-        {
-            pushCobranca(&gol, cx, cy, gx, gy, cont);
-            mostraCobranca(cx, cy, gx, gy, cont, 1);
-            contGol++;  //contador de gols
-        }
+                        SDL_Surface *image = IMG_Load("images/penalti.jpg");
+                        SDL_Texture *image_texture = SDL_CreateTextureFromSurface(renderer, image);
+                        SDL_FreeSurface(image);
+                        SDL_Rect texture_destination;
 
-        printf(" Tecle para parar...\n\n");
+                        texture_destination.x = 1;
+                        texture_destination.y = 0;
+                        texture_destination.w = 623;
+                        texture_destination.h = 313;
 
-        Sleep(1000); //funcao para pausar execucao - no caso, pausa por 1 segundo
+                        SDL_RenderClear(renderer);
+                        SDL_RenderCopy(renderer, image_texture, NULL, &texture_destination);
+                        SDL_RenderPresent(renderer);
 
-    }while(!kbhit()); // kbhit = ler tecla qualquer do teclado. Ou seja, executa o loop enquanto nenhuma tecla for apertada.
-
-
-    do //loop de execuçao do menu
-        {
-            system("cls");
-            printf("\n Menu de Dados\n");
-            printf(" 1 - Explicacao do modo de funcionamento da simulacao\n");
-            printf(" 2 - Ver a lista completa de cobrancas\n");
-            printf(" 3 - Ver a lista de Acertos\n");
-            printf(" 4 - Ver a lista de Defesas\n");
-            printf(" 5 - Ver a lista de Erros\n");
-            printf(" 6 - Ver as estatisticas gerais\n");
-            printf(" 9 - Sair do programa\n");
-            printf(" Digite a opcao desejada:");
-            scanf("%d", &opcao);
-            switch(opcao)
-                {
-                    case 1:
-                        system("cls");
-                        imprimeGOL();
-                        teclaContinuar();
-                        break;
-                    case 2:
-                        system("cls");
-                        mostrafila(cobranca);
-                        teclaContinuar();
-                        break;
-                    case 3:
-                        system("cls");
-                        mostrafila(gol);
-                        teclaContinuar();
-                        break;
-                    case 4:
-                        system("cls");
-                        mostrafila(defesa);
-                        teclaContinuar();
-                        break;
-                    case 5:
-                        system("cls");
-                        mostrafila(fora);
-                        teclaContinuar();
-                        break;
-                    case 6:
-                        system("cls");
-                        exibeEstatisticas(cont, contFora, contDefesa, contGol);
-                        teclaContinuar();
-                        break;
-                    case 9:
-                        printf("\n Saindo...\n");
-                        break;
-                    default:
-                        printf(" Opcao inexistente. retornando ao menu...\n");
                         Sleep(1500);
-                        break;
-                }
-        }while(opcao!=9);
 
-    printf("\n Ate mais!\n");
-    Sleep(1500);
+                        // Gerando chutes ao gol até reconhecer click do mouse
+                        pilha cobranca;
+                        srand(time(0));
+                        create(&cobranca);
 
-    return 0;
-    }
+                        while(runnig)
+                        {
+                            geraCoordenadas(&cx, &cy, &gx, &gy);
+                            pushCobranca(&cobranca, cx, cy, gx, gy);
+                            SDL_Event event2;
 
-//funções
+                            // verifica_cobranca retorna 1 (chute fora), 2 (defesa), 3 (gol) e 0 para nenhuma das anteriores.
+                            switch (verifica_cobranca (cx, cy, gx, gy))
+                            {
+                                case 1:
+                                    printf("TELA CHUTE PARA FORA");
+                                    image = IMG_Load("images/bolafora.png");
+                                break;
+                                case 2:
+                                    printf("TELA DEFESA");
+                                    image = IMG_Load("images/defesa.png");
+                                break;
+                                case 3:
+                                    printf("TELA GOL");
+                                    image = IMG_Load("images/gool.png");
+                                break;
+                            } //Fim Switch
 
-void create(fila *s)
+                            image_texture = SDL_CreateTextureFromSurface(renderer, image);
+
+                            SDL_RenderClear(renderer);
+                            SDL_RenderCopy(renderer, image_texture, NULL, &texture_destination);
+                            SDL_RenderPresent(renderer);
+
+                            // Para execução de chutes ao gol ao detectar click do mouse
+                            if(SDL_PollEvent(&event2))
+                                if(event2.type == SDL_MOUSEBUTTONDOWN)
+                                    if(event.button.button == SDL_BUTTON_LEFT)
+                                        runnig = false;
+
+                            Sleep(1500);
+                            printf("\n\nAguardando click para PARAR...");
+                        }//Fim While
+
+                    } //Fim if
+                break;
+
+                case SDL_QUIT:
+                    SDL_DestroyTexture(image_texture);
+                    IMG_Quit();
+                    SDL_DestroyRenderer(renderer);
+                    SDL_DestroyWindow(window);
+                    SDL_Quit();
+                    return 0;
+                break;
+            } //Fim switch
+        } //Fim if 93002874
+    } //Fim While
+
+    // Mostrando menu final (modo grafico)
+    image = IMG_Load("images/menu.png");
+    image_texture = SDL_CreateTextureFromSurface(renderer, image);
+
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, image_texture, NULL, &texture_destination);
+    SDL_RenderPresent(renderer);
+
+    // Mostrando menu final (terminal)
+    getch();
+} //Fim main()
+
+
+//======================FUNÇÕES============================
+
+void create(pilha *s)
 {
-s->inicio = NULL;
-s->fim = NULL;
+s->topo = NULL;
 }
 
-int pushCobranca(fila *s, int cx, int cy, int gx, int gy, int cont)
+int pushCobranca(pilha *s, int cx, int cy, int gx, int gy)
 {
 struct no *aux;
     aux =(struct no *)malloc(sizeof(struct no));
     if (aux==NULL)
         return 0;
 
-    aux->cont = cont;
     aux->chute_x=cx;
     aux->chute_y=cy;
     aux->gol_x=gx;
     aux->gol_y=gy;
-    //aux->prox= s->topo;
-    //s->topo=aux;
-    if(verifica_cobranca (cx, cy, gx, gy)==-1) //usa funcao verifica_cobranca para determinar o resultado e copiar a string referente a variavel de resultado na fila.
-        strcpy(aux->resultado, "Chute pra fora");
-    else if(verifica_cobranca (cx, cy, gx, gy)==0)
-        strcpy(aux->resultado, "Defesa do goleiro");
-    else
-        strcpy(aux->resultado, "Gol!");
-
-
-     aux->prox=NULL;
-    if (s->inicio==NULL)
-        s->inicio=aux;
-    if (s->fim!=NULL)
-        s->fim->prox=aux;
-    s->fim = aux;
-
+    aux->prox= s->topo;
+    s->topo=aux;
+    printf(" Chute em (%d ; %d)\n", aux->chute_x, aux->chute_y);
+    printf(" Goleiro em (%d ; %d)\n\n", aux->gol_x, aux->gol_y);
     return 1;
 }
-int isEmpty (fila s)
+
+int isEmpty (pilha s)
 {
 
-    if (s.inicio == NULL)
+    if (s.topo == NULL)
         return 1;
     return 0;
 }
 
-void geraCoordenadas(int *cx, int *cy, int *gx, int *gy) //gera valores aleatorios dentro dos limites estabelecidos para execuçao do simulador
+void geraCoordenadas(int *cx, int *cy, int *gx, int *gy)
 {
 
 
@@ -203,99 +202,44 @@ void geraCoordenadas(int *cx, int *cy, int *gx, int *gy) //gera valores aleatori
     *cy = rand()%3;
 
     *gx = rand()%4;
-    if(*gx<1) //if usado caso o valor gerado para goleiro x seja melhor que 1, oq e impossivel visto que goleiro deve estar entre 1 e 3 do eixo x.
+    if(*gx<1)
         *gx++;
-
+    /*while (*gx<1)
+        {
+        *gx = rand()%4;
+        }*/
     *gy = rand()%2;
 
 
 }
 
-void mostrafila (fila s)
+void mostraPilha (pilha s)
 {
-    struct no *aux;
-    aux = s.inicio;
 
-    if (aux == NULL)
-        printf(" Sem dados a exibir.\n");
-    else
-    {
-        while(aux != NULL)
-        {
-            printf(" Cobranca No. %d:\n Chute em:  (%d;%d)\n", aux->cont, aux->chute_x, aux->chute_y);
-            printf(" Goleiro em (%d;%d)\n", aux->gol_x, aux->gol_y);
-            printf(" Resultado: %s!\n\n", aux->resultado);
-            aux = aux->prox;
-
-        }
-    }
 }
 
-int verifica_cobranca (int cx, int cy, int gx, int gy) //verifica o resultado da cobranca de acordo com posicao do chute e do goleiro
+int verifica_cobranca (int cx, int cy, int gx, int gy)
 {
 
     if (cy == 2)
     {
-        //Chute para fora;
-        return -1;
+        printf(" Chute para fora!\n");
+        return 1;
     }
     else if (cx<0 || cx>3)
     {
-        //Chute para fora
-        return -1;
+        printf(" Chute para fora!\n");
+        return 1;
     }
     else if(cx == gx && cy == gy)
     {
-        //Defesa do goleiro
-        return 0;
+        printf(" Defesa do goleiro!\n");
+        return 2;
     }
-
-    else //Gol
-
-    return 1;
-}
-
-void mostraCobranca(int cx, int cy, int gx, int gy, int cont, int resultado) //exibe o resultado da cobranca
-{
-    printf(" Cobranca No. %d\n", cont);
-    printf(" Chute em   (%d ; %d)\n", cx, cy);
-    printf(" Goleiro em (%d ; %d)\n", gx,gy);
-    if(resultado == -1)
-        printf(" Resultado: Chute pra Fora!\n");
-    else if (resultado == 0)
-        printf(" Resultado: Defesa do Goleiro!\n");
     else
-        printf(" Resultado: Gol!\n");
-
-}
-
-void imprimeGOL() //exibe o funcionamento das coordenadas do simulador. **OLHEM ISSO**
-{
-    printf(R"EOF(
- Eis a determinacao do posicionamento no gol:
-
- (0;2) (1;2)(2;2)(3;2) (4;2)
-       ---------------
- (0;1)|(1;1)(2;1)(3;1)|(4;1)
- (0;0)|(1;0)(2;0)(3;0)|(4;0)
-
-)EOF");
-}
-
-void exibeEstatisticas(int cont, int contFora, int contDefesa, int contGol) //gera os dados das estatisticas do simulador. calculos feitos direto nos printf para economizar variaveis
-{
-    float contFloat; //usar conversao para variavel float pra nao ter erro na divisao entre inteiros
-    contFloat = cont;
-
-    printf("\n Estatisticas gerais de simulacao\n\n");
-    printf(" Total de Cobrancas: %d\n Gols Feitos: %d\n Defesas: %d\n Chutes Fora: %d\n",cont, contGol, contDefesa, contFora);
-    printf(" Porcentagem de acertos: %.2f%%\n", (contGol/contFloat)*100);
-    printf(" Porcentagem de Defesas: %.2f%%\n", (contDefesa/contFloat)*100);
-    printf(" Porcentagem de Chutes para Fora: %.2f%%\n\n", (contFora/contFloat)*100);
-}
-
-void teclaContinuar() //mensagem de execuçao em todo fim de tarefa.
-{
-    printf(" Digite qualquer tecla para continuar: ");
-    _getch();
+    {
+        printf(" Gol!\n");
+        return 3;
+    }
+    return 0;
 }
