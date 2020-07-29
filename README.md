@@ -2,6 +2,7 @@
 
 # AEDII - PenaltySimulator - Simulador de Penaltes em C com interface SDL2
 Aplicação em desenvolvimento...mudamos para outro repo;
+
 👉 https://github.com/denisjssilva/aed2-simulador_penaltis
 
 ## Objetivo
